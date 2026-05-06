@@ -1,0 +1,84 @@
+# Volatile state — never commit
+state/
+state-v2/*
+!state-v2/README.md
+acks/
+locks/
+logs/
+.forwarded-log
+.notion-synced
+
+# Syncthing
+.stfolder/
+*.sync-conflict-*
+
+# Log files
+*.log
+cost-log.jsonl
+
+# Node
+node_modules/
+
+# OS
+.DS_Store
+
+# Queue (runtime)
+queue/
+
+# Processed messages (archive)
+processed/
+
+# Inbox (ephemeral runtime dispatch)
+inbox/
+
+# Quarantine (auto-managed)
+quarantine/
+
+# Dead-letter queue (auto-managed)
+dead-letter/
+
+# Test results (ephemeral)
+test-results/
+
+# Watcher snapshots (extends *.pre-task-queue)
+*.pre-*
+*.bak
+*.sync-conflict-*
+
+# Secrets & credentials (defensive — file lives at ~/.myndaix/.secrets)
+.secrets
+.env
+.env.*
+*.pem
+*.key
+credentials*.json
+discord/.env
+
+# Defensive: agent-personal context (lives external by default)
+agent-knowledge/*.md
+agent-profiles/*.json
+telemetry/
+
+# Audio cache (keep audio/tts-bridge.sh; ignore everything else)
+audio/*.ogg
+audio/*.mp3
+audio/*.wav
+audio/*.aiff
+audio/played/
+
+# Other tracked-but-ephemeral runtime dirs (Phase 3.1 dropped these,
+# this keeps them dropped if they reappear)
+archive/
+outbox/
+memory/
+context/
+shared/
+kilabz-workspace/
+pre-v3-archive/
+acks/
+
+# Editor / OS
+.idea/
+.vscode/
+*.swp
+*.swo

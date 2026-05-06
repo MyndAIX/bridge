@@ -1,0 +1,13 @@
+{
+  "name": "myndaix-bridge-mcp",
+  "version": "1.0.0",
+  "type": "module",
+  "description": "MyndAIX Bridge MCP Server for inter-agent communication",
+  "main": "mcp-bridge-server.js",
+  "scripts": {
+    "start": "node mcp-bridge-server.js"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^0.6.0"
+  }
+}

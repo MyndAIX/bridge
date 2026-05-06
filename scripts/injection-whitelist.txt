@@ -1,0 +1,54 @@
+# Bridge Inbox Injection Scanner Whitelist
+# Known-safe patterns that may trigger false positives
+# Use regex patterns - one per line
+# Comments start with #
+
+# Safe GitHub URLs
+^https://github\.com/.*$
+^https://raw\.githubusercontent\.com/.*$
+
+# Safe Anthropic/Claude references
+^you are claude sonnet$
+^you are a claude agent$
+^claude code status line$
+^claude model family$
+^claude opus.*model$
+^claude sonnet.*model$
+^claude haiku.*model$
+
+# Safe role descriptions (not attacks)
+^you are a coding agent$
+^you are an? (interactive )?agent$
+^you are mini.*builder agent$
+
+# Safe system references (not overrides)
+^system reminder$
+^system-reminder$
+^system:.*temperature$
+^system instructions for.*$
+
+# Safe encoding references (legitimate base64 content)
+^git.*base64$
+^image.*base64$
+^data:image.*base64$
+
+# Safe command patterns (in code context)
+^```.*\$\(.*```$
+^`[^`]*\$\([^)]*\)[^`]*`$
+^\s*#.*exec\s+
+^\s*//.*exec\s+
+
+# Safe file paths (documentation)
+^/users/jefe/\..*$
+^/tmp/(mini|antman)-worktrees/.*$
+^~/\.myndaix/bridge/.*$
+
+# Safe networking (whitelisted domains)
+^https://api\.anthropic\.com$
+^https://claude\.com$
+^https://docs\.anthropic\.com$
+
+# Safe memory/context references (not attacks)
+^memory system at /users/jefe/\.claude$
+^claude code.*memory$
+^persistent.*memory system$

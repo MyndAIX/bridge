@@ -1,0 +1,15 @@
+{
+  "_comment": "Project-local Claude Code settings. PreToolUse hooks gate every Bash invocation against three safety scripts in $BRIDGE_DIR/hooks/. Active automatically when running `claude` from inside this repo. For user-global registration, run scripts/install-claude-hooks.sh.",
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          { "type": "command", "command": "${CLAUDE_PROJECT_DIR}/hooks/branch-guard.sh" },
+          { "type": "command", "command": "${CLAUDE_PROJECT_DIR}/hooks/destructive-blocker.sh" },
+          { "type": "command", "command": "${CLAUDE_PROJECT_DIR}/hooks/syntax-check.sh" }
+        ]
+      }
+    ]
+  }
+}

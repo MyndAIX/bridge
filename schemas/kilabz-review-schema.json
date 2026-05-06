@@ -1,0 +1,35 @@
+{
+  "type": "object",
+  "properties": {
+    "summary": {
+      "type": "string",
+      "description": "One paragraph overall assessment"
+    },
+    "pass_fail": {
+      "type": "string",
+      "enum": ["PASS", "FAIL", "PASS_WITH_WARNINGS"]
+    },
+    "findings": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "severity": {
+            "type": "string",
+            "enum": ["critical", "high", "medium", "low", "info"]
+          },
+          "file": {"type": "string"},
+          "line": {"type": "integer"},
+          "finding": {"type": "string"},
+          "recommendation": {"type": "string"}
+        },
+        "required": ["severity", "file", "finding", "recommendation"]
+      }
+    },
+    "files_reviewed": {
+      "type": "array",
+      "items": {"type": "string"}
+    }
+  },
+  "required": ["summary", "pass_fail", "findings", "files_reviewed"]
+}

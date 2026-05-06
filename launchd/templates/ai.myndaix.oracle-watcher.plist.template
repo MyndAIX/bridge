@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>Label</key>
+    <string>ai.myndaix.oracle-watcher</string>
+    <key>ProgramArguments</key>
+    <array>
+        <string>/bin/bash</string>
+        <string>__BRIDGE_DIR__/watchers/oracle-watcher.sh</string>
+    </array>
+    <key>WatchPaths</key>
+    <array>
+        <string>__BRIDGE_DIR__/inbox/oracle</string>
+    </array>
+    <key>StandardOutPath</key>
+    <string>__BRIDGE_DIR__/watchers/oracle-watcher.log</string>
+    <key>StandardErrorPath</key>
+    <string>__BRIDGE_DIR__/watchers/oracle-watcher.log</string>
+    <key>EnvironmentVariables</key>
+    <dict>
+        <key>PATH</key>
+        <string>/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin</string>
+        <key>HOME</key>
+        <string>__HOME__</string>
+        <key>LANG</key>
+        <string>en_US.UTF-8</string>
+        <key>LC_ALL</key>
+        <string>en_US.UTF-8</string>
+    </dict>
+</dict>
+</plist>

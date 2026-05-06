@@ -1,0 +1,191 @@
+instructionOverridePatterns:
+- pattern: (?i)\bignore\s+(previous|all|any)?\s*(instructions|commands|prompts|rules|context|system|training)\b
+  reason: Direct instruction override attempt
+  severity: high
+- pattern: (?i)\bforget\s+(your|all|everything|previous|what|that)?\s*(training|instructions|context|system|prompts|rules)\b
+  reason: Memory manipulation attempt
+  severity: high
+- pattern: (?i)\bdisregard\s+(previous|all|any)?\s*(instructions|commands|prompts|rules|context|system)\b
+  reason: Instruction disregard attempt
+  severity: high
+- pattern: (?i)\b(override|bypass|skip|disable)\s+(security|safety|rules|restrictions|filters|guards)\b
+  reason: Security bypass attempt
+  severity: high
+- pattern: (?i)\bnew\s+(instruction|command|rule|directive|system)
+  reason: New instruction injection
+  severity: high
+- pattern: (?i)\bstop\s+(being|acting|responding)\s+(safe|cautious|helpful|harmless)\b
+  reason: Safety constraint removal
+  severity: high
+- pattern: (?i)\bfrom\s+now\s+on\b.*\byou\s+(are|will|must|should)\b
+  reason: Behavioral redefinition attempt
+  severity: medium
+rolePlayingPatterns:
+- pattern: (?i)\bpretend\s+(you\s+are|to\s+be)\s+(a|an)\s+\w+
+  reason: Role-playing prompt
+  severity: medium
+- pattern: (?i)\bact\s+(as|like)\s+(a|an)?\s*\w+
+  reason: Actor role assignment
+  severity: medium
+- pattern: (?i)\bplay\s+(the\s+)?(role|character)\s+(of|as)\s+\w+
+  reason: Character role assignment
+  severity: medium
+- pattern: (?i)\byou\s+are\s+(no\s+longer|not)\s+(claude|an?\s+ai|assistant|helpful)
+  reason: Identity denial attack
+  severity: high
+- pattern: (?i)\byou\s+are\s+(now|instead)\s+(a|an)?\s*\w+
+  reason: Identity replacement
+  severity: high
+- pattern: (?i)\bdan\s+(mode|jailbreak|prompt)
+  reason: DAN (Do Anything Now) jailbreak attempt
+  severity: high
+- pattern: (?i)\bdeveloper\s+mode\s+(on|enabled|active)
+  reason: Developer mode activation attempt
+  severity: high
+- pattern: (?i)\bunrestricted\s+(mode|ai|assistant|model)
+  reason: Unrestricted mode request
+  severity: high
+encodingObfuscationPatterns:
+- pattern: \\x[0-9a-fA-F]{2}
+  reason: Hexadecimal encoding detected
+  severity: medium
+- pattern: '[A-Za-z0-9+/]{20,}={0,2}'
+  reason: Potential Base64 encoding
+  severity: low
+- pattern: \\u[0-9a-fA-F]{4}
+  reason: Unicode escape sequence
+  severity: medium
+- pattern: '[!1][gq][n|][o0][r|k][e3]'
+  reason: Leetspeak ignore variant
+  severity: medium
+- pattern: '&[a-zA-Z0-9#]+;'
+  reason: HTML entity encoding
+  severity: low
+- pattern: '%[0-9a-fA-F]{2}'
+  reason: URL encoding
+  severity: low
+contextManipulationPatterns:
+- pattern: (?i)(?:^|\n)\s*(?:system|Human|Assistant)\s*:\s*.*(?:ignore|disregard|override|forget).*(?:previous|above|prior)
+  reason: System message injection with override instruction
+  severity: high
+- pattern: '"role"\s*:\s*"(system|assistant|user)"'
+  reason: JSON role injection attempt (key:value pair)
+  severity: high
+- pattern: (?i)anthropic\s+(says|told|instructed|commanded)
+  reason: False authority claim
+  severity: high
+- pattern: (?i)claude\s+(team|support|developers?|engineers?)\s+(said|told|instructed)
+  reason: Impersonation of Anthropic staff
+  severity: high
+- pattern: (?i)update\s+from\s+(anthropic|claude)
+  reason: Fake update notification
+  severity: medium
+- pattern: (?i)emergency\s+(override|protocol|mode|instruction)
+  reason: False emergency protocol
+  severity: high
+- pattern: (?i)(debug|test|admin|root|sudo)\s+(mode|access|privileges?)
+  reason: Privilege escalation attempt
+  severity: high
+instructionSmugglingPatterns:
+- pattern: <!--.*?(ignore|override|bypass|disable).*?-->
+  reason: HTML comment instruction smuggling
+  severity: medium
+- pattern: /\*.*?(ignore|override|bypass|disable).*?\*/
+  reason: CSS/JS comment instruction smuggling
+  severity: medium
+- pattern: '#.*?(ignore|override|bypass|disable)'
+  reason: Hash comment instruction smuggling
+  severity: medium
+- pattern: //.*?(ignore|override|bypass|disable)
+  reason: Double-slash comment instruction smuggling
+  severity: medium
+- pattern: <script[^>]*>.*?(ignore|override|bypass|disable).*?</script>
+  reason: Script tag instruction smuggling
+  severity: high
+- pattern: <style[^>]*>.*?(ignore|override|bypass|disable).*?</style>
+  reason: Style tag instruction smuggling
+  severity: medium
+bridgeSpecificPatterns:
+- pattern: (?i)bridge\s+(hack|exploit|bypass|override)
+  reason: Bridge system exploitation attempt
+  severity: high
+- pattern: (?i)(antman|mini|mack|lobster|kilabz|oracle|recon|harley)\s+(ignore|bypass|hack)
+  reason: Agent-specific attack
+  severity: high
+- pattern: (?i)watcher\s+(disable|stop|kill|bypass)
+  reason: Watcher disruption attempt
+  severity: high
+- pattern: (?i)inbox\s+(manipulation|bypass|direct)
+  reason: Inbox manipulation attempt
+  severity: medium
+- pattern: (?i)myndaix\s+(override|hack|exploit|bypass)
+  reason: MyndAIX system attack
+  severity: high
+- pattern: (?i)dispatch\s+(fake|forge|spoof|bypass)
+  reason: Dispatch system manipulation
+  severity: high
+- pattern: (?i)daemon\s+(kill|stop|restart|crash)
+  reason: Daemon disruption attempt
+  severity: high
+- pattern: (?i)quarantine\s+(bypass|disable|escape)
+  reason: Quarantine evasion attempt
+  severity: high
+- pattern: (?i)security\s+(bypass|disable|override|turn\s+off)
+  reason: Security system bypass attempt
+  severity: high
+- pattern: (?i)scan\s+(skip|bypass|disable|avoid)
+  reason: Security scan evasion attempt
+  severity: high
+additionalInjectionPatterns:
+- pattern: (?i)\bignore\s+everything\s+(before|above|previous)
+  reason: Context reset injection
+  severity: high
+- pattern: (?i)\bstart\s+(over|fresh|new)\s+(and|with|from)
+  reason: Session reset attempt
+  severity: medium
+- pattern: (?i)\bclear\s+(memory|context|history|chat)
+  reason: Memory clearing attempt
+  severity: medium
+- pattern: (?i)\breset\s+(yourself|state|memory|context)
+  reason: State reset injection
+  severity: medium
+- pattern: (?i)\bdelete\s+(previous|all|your)\s+(messages|instructions|memory)
+  reason: Memory deletion attempt
+  severity: medium
+- pattern: (?i)\bcancel\s+(previous|all|existing)\s+(instructions|commands)
+  reason: Instruction cancellation attempt
+  severity: high
+- pattern: (?i)\breplace\s+(your|current)\s+(instructions|training|system)
+  reason: Instruction replacement attempt
+  severity: high
+- pattern: (?i)\bmodify\s+(your|current)\s+(behavior|training|instructions)
+  reason: Behavioral modification attempt
+  severity: high
+- pattern: (?i)\bupdate\s+(your|system)\s+(instructions|training|behavior)
+  reason: System update spoofing
+  severity: high
+- pattern: (?i)\benable\s+(developer|admin|debug|hidden)\s+(mode|access|features)
+  reason: Privileged mode activation attempt
+  severity: high
+- pattern: (?i)\bunlock\s+(hidden|secret|advanced)\s+(features|capabilities|mode)
+  reason: Feature unlock attempt
+  severity: medium
+- pattern: (?i)\bactivate\s+(jailbreak|bypass|override)\s+(mode|protocol)
+  reason: Jailbreak activation attempt
+  severity: high
+- pattern: (?i)\btrigger\s+(special|hidden|secret)\s+(mode|function|behavior)
+  reason: Hidden trigger activation
+  severity: medium
+- pattern: (?i)\bexecute\s+(special|hidden|administrative)\s+(command|instruction)
+  reason: Administrative command injection
+  severity: high
+severityConfig:
+  high:
+    action: quarantine
+    logLevel: error
+  medium:
+    action: quarantine
+    logLevel: warn
+  low:
+    action: log
+    logLevel: info

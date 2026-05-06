@@ -1,0 +1,45 @@
+// Runtime state — per-machine, never sync
+/state/
+/state/daemon-heartbeat-*.json
+/state/*-daily-runs.json
+/state/dedupe/
+/state/retries/
+/state/self-healing/
+/state/reviews/
+/state/acks/
+
+// Locks — per-machine
+/locks/
+*.lock
+
+// Logs — per-machine
+/logs/
+/watchers/*.log
+/watchers/*-err.log
+daemon.log
+daemon-stderr.log
+
+// PID files
+*.pid
+
+// Temp and conflict files
+*.tmp
+*.tmp.*
+*~syncthing~*
+*.sync-conflict-*
+.stfolder/
+
+// Queue — removed (Phase 0)
+/queue/
+
+// Quarantine — local only
+/quarantine/
+
+// Node modules
+/node_modules/
+
+// MacBook-owned files — do not overwrite
+/mcp-bridge-server.js
+
+// Deprecated scripts
+/scripts/_deprecated/

@@ -1,0 +1,20 @@
+# Logs
+*.log
+*.log.bak
+
+# Syncthing conflicts
+*.sync-conflict-*
+
+# Secrets (loaded at runtime from ~/.myndaix/.secrets)
+.secrets
+.env
+
+# Backups
+*.bak
+
+# LaunchAgent plists (machine-specific)
+*.plist
+
+# Per-watcher state markers
+.seen
+*.pre-*
