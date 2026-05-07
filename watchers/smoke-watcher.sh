@@ -89,8 +89,8 @@ PY
 # Kill claude processes older than 30 minutes (smoke tasks should never run that long)
 STALE_MINUTES=30
 while IFS= read -r line; do
-  cpid=$(echo "$line" | awk {print })
-  elapsed=$(ps -o etime= -p "$cpid" 2>/dev/null | tr -d  )
+  cpid=$(echo "$line" | awk '{print $2}')
+  elapsed=$(ps -o etime= -p "$cpid" 2>/dev/null | tr -d ' ')
   if [[ -n "$elapsed" ]]; then
     # Parse elapsed time (formats: MM:SS, HH:MM:SS, D-HH:MM:SS)
     if [[ "$elapsed" =~ ^[0-9]+-|^[0-9]+:[0-9]+:[0-9]+ ]]; then
@@ -103,7 +103,7 @@ done < <(ps aux | grep "claude.*dangerously-skip" | grep -v grep 2>/dev/null)
 
 # ── Concurrency limit ──
 MAX_CONCURRENT_CLAUDE=3
-current_claude=$(ps aux | grep "claude.*dangerously-skip" | grep -v grep | wc -l | tr -d  )
+current_claude=$(ps aux | grep "claude.*dangerously-skip" | grep -v grep | wc -l | tr -d ' ')
 if (( current_claude >= MAX_CONCURRENT_CLAUDE )); then
   log "Concurrency limit: $current_claude claude processes running (max $MAX_CONCURRENT_CLAUDE) — skipping"
   exit 0
