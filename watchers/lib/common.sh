@@ -802,6 +802,17 @@ detect_failure_pattern() {
 promote_pattern_to_spec() {
   local pid="$1" project="${2:-myndaix}"
 
+  # Idempotency guard: no-op if this pattern already has a spec stamped.
+  # Prevents duplicate spec writes when the helper is re-fired against
+  # already-approved patterns (caught by Lobster 2026-05-07).
+  local existing_spec
+  existing_spec=$(sqlite3 "$HOME/.myndaix/memory.db" \
+    "SELECT COALESCE(spec_path,'') FROM patterns WHERE id=$pid" 2>/dev/null)
+  if [ -n "$existing_spec" ]; then
+    log_task "PATTERN-$pid" "pattern-detector" "pattern_promoted" "already_specced" "auto" 0 0 "spec already exists: $existing_spec"
+    return 0
+  fi
+
   local row desc agent rec_type occ fp evid
   row=$(sqlite3 "$HOME/.myndaix/memory.db" \
     "SELECT description, agent, COALESCE(promoted_to, recommended_type), occurrences, fingerprint, COALESCE(evidence_task_ids,'')
