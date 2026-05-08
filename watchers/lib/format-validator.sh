@@ -165,6 +165,10 @@ validate_kilabz_result_fallback() {
 
   local findings_count
   # Original loose evidence regex - any non-empty content between Evidence: and | Reason:
+  # NOTE: \s+ is a GNU/PCRE feature; this script targets bash + GNU grep (-E).
+  # On macOS this requires either gnu-grep (brew) or bash regex compatibility;
+  # confirmed working with system grep -E on macOS 14+. Do not port to BSD grep
+  # without converting \s to [[:space:]].
   findings_count=$(grep -Ec '^[0-9]+\.\s+\[(PASS|FAIL)\]\s+.+\|\s+Evidence:\s+.+\s+\|\s+Reason:\s+.+' "$output_file" || echo 0)
 
   if (( findings_count == 0 )); then
