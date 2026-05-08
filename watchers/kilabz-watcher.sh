@@ -39,6 +39,7 @@ source "$LIB_DIR/context.sh"
 source "$LIB_DIR/self-healing.sh"
 source "$LIB_DIR/preflight.sh"
 source "$LIB_DIR/chaining.sh"
+source "$LIB_DIR/format-validator.sh"
 
 ensure_budget_file() {
   python3 - "$STATE_FILE" <<'PY'
@@ -201,33 +202,9 @@ count_rubric_criteria() {
   grep -Ec '^[0-9]+\.' "$rubric_file" 2>/dev/null || echo 0
 }
 
-validate_review_output_contract() {
-  local output_file="$1"
-  local expected_count="$2"
-
-  if ! grep -Eq '^OVERALL VERDICT: (PASS|FAIL)$' "$output_file"; then
-    echo "missing or invalid 'OVERALL VERDICT: PASS|FAIL' line"
-    return 1
-  fi
-
-  local findings_count
-  # Evidence portion is intentionally loose: any non-empty content between
-  # "Evidence: " and " | Reason:" passes. We're gating on structure (did the
-  # model produce a finding line), not on perfect citation formatting.
-  findings_count=$(grep -Ec '^[0-9]+\.\s+\[(PASS|FAIL)\]\s+.+\|\s+Evidence:\s+.+\s+\|\s+Reason:\s+.+' "$output_file" || true)
-
-  if (( findings_count == 0 )); then
-    echo "no findings matched required '[PASS|FAIL] ... | Evidence: file:line | Reason: ...' format"
-    return 1
-  fi
-
-  if (( expected_count > 0 && findings_count < expected_count )); then
-    echo "insufficient findings: expected at least $expected_count, got $findings_count"
-    return 1
-  fi
-
-  return 0
-}
+# validate_review_output_contract() function removed
+# Replaced by strict format validator in watchers/lib/format-validator.sh
+# Use validate_kilabz_output() instead
 
 
 # ══════════════════════════════════════════════════════════
@@ -635,8 +612,17 @@ fi
 
 review_output_file=$(mktemp)
 printf '%s\n' "$review_output" > "$review_output_file"
-if ! contract_error=$(validate_review_output_contract "$review_output_file" "${rubric_criteria_count:-0}"); then
-  VALIDATION="FAILED"
+
+# Use strict format validator (with feature-flagged fallback to loose regex)
+if ! contract_error=$(validate_kilabz_output "$review_output_file" "${rubric_criteria_count:-0}" 2>&1); then
+  VALIDATION="FORMAT_VALIDATION_FAILED"
+
+  # Route to quarantine instead of normal result processing
+  quarantine_file=$(route_to_quarantine "$TASK_NAME" "$contract_error" "$review_output")
+  log "Format validation failed for $TASK_NAME: $contract_error"
+  log "Task quarantined: $quarantine_file"
+
+  # Set output for result envelope (still processed but marked as failed)
   review_output=$(
     cat <<EOF
 FORMAT_VALIDATION_FAILED: $contract_error
@@ -644,7 +630,9 @@ FORMAT_VALIDATION_FAILED: $contract_error
 Expected format:
 OVERALL VERDICT: PASS|FAIL
 FINDINGS:
-1. [PASS|FAIL] <criterion> | Evidence: <relative/path.ext:line> | Reason: <one short sentence>
+1. [PASS|FAIL] <criterion> | Evidence: <file:line> | Reason: <one short sentence>
+
+Validation mode: ${KILABZ_STRICT_VALIDATION:-true} (strict=${KILABZ_STRICT_VALIDATION:-true})
 
 Raw model output:
 $review_output
@@ -714,6 +702,7 @@ if command -v openclaw >/dev/null 2>&1; then
   [[ "$VALIDATION" == "FAILED" ]] && status_icon="❌"
   [[ "$VALIDATION" == "TIMEOUT" ]] && status_icon="⏰"
   [[ "$VALIDATION" == "REJECTED" ]] && status_icon="🚫"
+  [[ "$VALIDATION" == "FORMAT_VALIDATION_FAILED" ]] && status_icon="📝"
   openclaw message send --channel discord -t "${DISCORD_COMMAND_CHANNEL:-}" \
     -m "${status_icon} **KilaBz finished:** ${TASK_NAME%.md} — ${VALIDATION}" \
     --silent 2>/dev/null &
