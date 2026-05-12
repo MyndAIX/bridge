@@ -1,8 +1,9 @@
 ---
 title: MyndAIX System Manifest
-version: 1.0
+version: 1.1
 created: 2026-05-04
-authority: canonical reference as of agent cleanup week
+updated: 2026-05-11
+authority: canonical reference refreshed per Recon weekly audit
 machine_audited: <your-mini-host> (Mac mini M4, macOS 26.2)
 ---
 
@@ -48,7 +49,7 @@ Format: facts, not aspirations. If something is planned but not built, it's in s
 
 ### LaunchAgents (Mini)
 
-**18 `ai.myndaix.*.plist` files in `~/Library/LaunchAgents/`, plus 6 `com.myndaix.*.plist` files. 24 total loaded in `launchctl list` (the `.plist.disabled` rename is excluded; `ai.myndaix.daemon.plist` was moved to `disabled/` subdir on 2026-05-04). Run `launchctl list | grep myndaix` for the live set.**
+**19 `ai.myndaix.*.plist` files in `~/Library/LaunchAgents/`, plus 6 `com.myndaix.*.plist` files. 25 total loaded in `launchctl list` (the `.plist.disabled` rename is excluded; `ai.myndaix.daemon.plist` was moved to `disabled/` subdir on 2026-05-04). Run `launchctl list | grep myndaix` for the live set.**
 
 PID-bound (have a PID in `launchctl list`):
 
@@ -57,13 +58,14 @@ PID-bound (have a PID in `launchctl list`):
 | `ai.myndaix.auto-router` | ai.myndaix | Routes inbound bridge traffic by type |
 | `ai.myndaix.inbox-dispatcher` | ai.myndaix | Drives task dispatch |
 | `ai.myndaix.inbox-watcher` | ai.myndaix | Inbox-level event handler |
+| `com.myndaix.auth-watchdog` | com.myndaix | Authentication monitoring (PID 42892) |
 | `com.myndaix.notion-sync` | com.myndaix | Notion ↔ bridge sync (loaded via launchctl; plist not in the standard `~/Library/LaunchAgents/` location — investigate if needed) |
 | `com.myndaix.claw-cursor` | com.myndaix | OpenClaw / Claude Code session helper |
 
 Event-driven (no PID, fire on file event or schedule):
 
-- **`ai.myndaix.*`** — `mini-watcher`, `antman-watcher`, `kilabz-watcher`, `oracle-watcher`, `recon-watcher`, `harley-watcher`, `smoke-watcher`, `lobster-monitor`, `bridge-watchdog`, `lobster-discord-relay`, `heartbeat-check`, `homeostasis`, `memory-decay`, `worktree-cleanup`, `weekly-audit`
-- **`com.myndaix.*`** — `auth-watchdog`, `log-rotation`, `notion-poller`, `codex-token-refresh`, `tts-bridge` (Disabled=true)
+- **`ai.myndaix.*`** — `mini-watcher`, `antman-watcher`, `kilabz-watcher`, `oracle-watcher`, `recon-watcher`, `harley-watcher`, `smoke-watcher`, `lobster-monitor`, `bridge-watchdog`, `discord-relay`, `heartbeat-check`, `homeostasis`, `memory-decay`, `worktree-cleanup`, `weekly-audit`, `secrets-audit`
+- **`com.myndaix.*`** — `log-rotation`, `notion-poller`, `codex-token-refresh`, `tts-bridge` (Disabled=true)
 
 Disabled persistently:
 
@@ -74,26 +76,25 @@ Disabled persistently:
 
 | Path | Purpose |
 |---|---|
-| `bridge/` (485 MB total ~/.myndaix; 103 MB this dir) | Multi-agent message bus (Syncthing-shared) |
-| `bridge/watchers/` | Watcher + runner scripts (105 entries; many `.bak`/`.pre-*` snapshots) |
+| `bridge/` (521 MB total ~/.myndaix; 98 MB this dir) | Multi-agent message bus (Syncthing-shared) |
+| `bridge/watchers/` | Watcher + runner scripts (113 entries; many `.bak`/`.pre-*` snapshots) |
 | `bridge/watchers/lib/` | Shared libraries: `common.sh`, `guardrails.sh`, `chaining.sh`, `context.sh`, `knowledge.sh`, `parallel.sh`, `preflight.sh`, `self-healing.sh` |
 | `bridge/inbox/<agent>/` | Per-agent inbox (lobster, mini, mack, antman, kilabz, oracle, recon, harley, smoke, dispatch) |
-| `bridge/processed/` | Archived tasks (1564 entries) |
+| `bridge/processed/` | Archived tasks (660 entries) |
 | `bridge/state/` | Heartbeats, daily-runs, dedupe markers, paused flags, checkpoints |
-| `bridge/scripts/` | Dispatch + maintenance scripts (49 entries) |
+| `bridge/scripts/` | Dispatch + maintenance scripts (51 entries) |
 | `bridge/hooks/` | Claude Code hook scripts: `branch-guard.sh`, `destructive-blocker.sh`, `syntax-check.sh`, `new-script-warning.sh`, `inbox-check.sh`, `inbox-check-mini.sh`, `pre-dispatch-gate.sh` (plus 1+ Syncthing sync-conflict copies of `pre-dispatch-gate.sh` — clean up periodically) |
 | `bridge/myndaix-daemon.js` | Node v2.0 daemon |
 | `factory/` | Software factory: specs, scenarios, evals, knowledge, dashboards, workflows |
 | `factory/workflows/` | Per-project workflow files (currently `fieldvision.md`, `myndaix.md`) |
 | `agent-knowledge/<agent>.md` | Curated per-agent persona/rules (always loaded into prompts) |
 | `agent-profiles/<agent>-<profile>.json` | Tool-permission profiles (Mack uses these) |
-| `memory.db` (108KB, SQLite) | Tables: `memory`, `patterns`, `tasks`, `migration_log` |
-| `telemetry/tasks.jsonl` (6.8 MB, 32,819 lines) | Append-only event log; first entry 2026-04-25, last 2026-05-04 |
+| `memory.db` (128KB, SQLite) | Tables: `memory`, `patterns`, `tasks`, `migration_log` |
+| `telemetry/tasks.jsonl` (50 MB, 248,983 lines) | Append-only event log; first entry 2026-04-25, last updated live |
 | `knowledge/` | Semantic-search store (separate from factory/knowledge) — `inject-context.sh`, `query.py`, `ingest.py`, embeddings dir |
 | `lobster-bot/` | Lobster's Discord notifier code + memory DB |
 | `discord/.env` | 10 Discord webhook URLs (chmod 600) |
 | `.secrets` | chmod 600. Contains `PERPLEXITY_API_KEY`, `GEMINI_API_KEY`, `ELEVENLABS_API_KEY`. Only `tools/cost-tracker.sh` actually sources this file. Recon's PERPLEXITY key is consumed via the recon-watcher LaunchAgent plist env block (what launchd injects); `.secrets` is the canonical inventory but is NOT sourced by recon-watcher. Oracle's `gemini` CLI uses a separate OAuth path (`~/.gemini/settings.json` → `selectedType: oauth-personal`), not GEMINI_API_KEY. ELEVENLABS has no active consumer as of 2026-05-04. The file itself documents these consumption paths inline. |
-| `.openclaw/workspace/` (1.7 GB) | Default fallback repo when a task has no `repo:` |
 
 ---
 
@@ -105,7 +106,7 @@ Eight named agents, plus Smoke (automated QA) which is part of the dispatch chai
 
 - **Role:** routes work between agents, owns the conversation, posts to Discord
 - **Engine:** Claude Code (interactive session on OpenClaw, not via watcher)
-- **Watcher:** none — Lobster is interactive. `bridge/watchers/lobster-monitor.sh` (every 5 min via LaunchAgent `ai.myndaix.lobster-monitor`) watches the OpenClaw session for memory pressure / uptime drift and rotates before degradation. `bridge/watchers/lobster-discord-relay.sh` posts inbox results to Discord.
+- **Watcher:** none — Lobster is interactive. `bridge/watchers/lobster-monitor.sh` (every 5 min via LaunchAgent `ai.myndaix.lobster-monitor`) watches the OpenClaw session for memory pressure / uptime drift and rotates before degradation. `bridge/watchers/discord-relay.sh` posts inbox results to Discord.
 - **Discord:** `lobster-notifier` (PM2) tails `inbox/lobster/` and posts results via webhook
 - **Memory:** owns `~/.myndaix/lobster-bot/lobster-memory.db` (separate from main `memory.db`)
 - **Status:** see `state/lobster-session.json` for current state
@@ -261,7 +262,7 @@ Append-only JSON-lines event log. One line per claim/skip/terminal event.
 - `detect_pattern` (`common.sh::detect_pattern`) — sha256 fingerprint of `agent|type|repo|top-3-keywords`, dedupe + occurrence count
 - `detect_failure_pattern` — same with `F` prefix
 - Auto-promotes to Lobster as proposal at 3+ occurrences
-- Current state: 13 patterns. Top: `pattern 4` (Oracle lint_rule, 10 occurrences, **promoted=1**), `pattern 6` (Mini prompt_improvement, 9 occurrences, promoted=1), `pattern 12` (KilaBz failure, 7 occurrences)
+- Current state: 23 patterns. Top: `pattern 4` (Oracle lint_rule, 19 occurrences, **promoted=1**), `pattern 6` (Mini prompt_improvement, 9 occurrences, promoted=1), `pattern 12` (KilaBz failure, 7 occurrences)
 - Wired: all agents
 
 ### Symphony Part A — Workflow Injection
@@ -428,8 +429,8 @@ Symphony Part A injects `### Outside counsel integration` workflow sections into
 | Task results → `#command-center` | `lobster-notifier` PM2 process tails `inbox/lobster/` |
 | Per-task ping (✅/❌/⏰/🚫) | each watcher fires `openclaw message send --channel discord -t 1483696525040291894 ...` |
 | 10 webhook URLs | `~/.myndaix/discord/.env` (chmod 600) |
-| Pain alerts | `bridge/watchers/lobster-discord-relay.sh` LaunchAgent |
-| Bridge health | `bridge/watchers/lobster-discord-relay.sh` |
+| Pain alerts | `bridge/watchers/discord-relay.sh` LaunchAgent |
+| Bridge health | `bridge/watchers/discord-relay.sh` |
 
 ---
 
@@ -440,14 +441,14 @@ Layered. No single line of defense.
 ### Sender allowlists (per agent — exact strings from current files)
 
 ```
-mini       lobster mini antman mack jefe oracle recon harley notion-poller
-antman     lobster mini antman mack jefe oracle recon harley notion-poller
-kilabz     lobster mini antman mack jefe oracle recon harley
-oracle     lobster mini antman mack jefe kilabz recon harley oracle smoke
-recon      lobster mini antman mack jefe oracle recon harley
-harley     lobster mini antman mack jefe oracle recon harley
-smoke      lobster mini antman mack jefe
-mack       trusted-senders.conf | fallback: lobster mini jefe mack antman kilabz oracle recon harley
+mini       lobster mini antman mack jefe oracle recon harley notion-poller cli
+antman     lobster mini antman mack jefe oracle recon harley notion-poller cli
+kilabz     lobster mini antman mack jefe oracle recon harley cli
+oracle     lobster mini antman mack jefe kilabz recon harley oracle smoke cli
+recon      lobster mini antman mack jefe oracle recon harley cli
+harley     lobster mini antman mack jefe oracle recon harley cli
+smoke      lobster mini antman mack jefe cli
+mack       trusted-senders.conf | fallback: lobster mini jefe mack antman kilabz oracle recon harley cli
 ```
 
 ### Tier check
