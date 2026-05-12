@@ -41,6 +41,68 @@ source "$LIB_DIR/preflight.sh"
 source "$LIB_DIR/chaining.sh"
 source "$LIB_DIR/format-validator.sh"
 
+# ── Workflow lookup helpers (Part A) — mirrors agent-dispatch.sh ──
+# Looks up per-project workflow under factory/workflows/ and extracts the
+# section relevant to this agent's role.
+WORKFLOWS_DIR="$HOME/.myndaix/factory/workflows"
+
+resolve_agent_role() {
+  case "$1" in
+    mini|mack|antman) echo "Build agents" ;;
+    kilabz)           echo "Review agents" ;;
+    oracle)           echo "Architecture review" ;;
+    recon)            echo "Research" ;;
+    harley)           echo "Creative" ;;
+    *)                echo "" ;;
+  esac
+}
+
+find_workflow_file() {
+  local task_repo="$1"
+  [[ -z "$task_repo" || ! -d "$WORKFLOWS_DIR" ]] && return 0
+  local expanded_repo="${task_repo/#\~/$HOME}"
+  local best_file="" best_len=0
+  for wf in "$WORKFLOWS_DIR"/*.md; do
+    [[ ! -f "$wf" ]] && continue
+    local wf_repo
+    wf_repo=$(awk '/^---$/{c++; next} c==1 && /^repo:/{sub(/^repo:[[:space:]]*/, ""); print; exit}' "$wf")
+    [[ -z "$wf_repo" ]] && continue
+    local expanded_wf="${wf_repo/#\~/$HOME}"
+    local match_len=0
+    if [[ "$expanded_repo" == "$expanded_wf" ]]; then
+      match_len=${#expanded_wf}
+    else
+      local proj_name
+      proj_name=$(basename "$expanded_wf")
+      if [[ "$expanded_repo" == *"/$proj_name"* || "$expanded_repo" == *"$proj_name"* ]]; then
+        match_len=${#expanded_wf}
+      fi
+    fi
+    if (( match_len > best_len )) || { (( match_len == best_len )) && (( match_len > 0 )) && [[ "$wf" < "$best_file" ]]; }; then
+      best_file="$wf"
+      best_len=$match_len
+    fi
+  done
+  [[ -n "$best_file" ]] && echo "$best_file"
+  return 0
+}
+
+extract_workflow_section() {
+  local wf_file="$1" role="$2"
+  [[ -z "$wf_file" || -z "$role" ]] && return 0
+  awk -v role="$role" '
+    /^### /{
+      prefix = "### " role
+      if (substr($0, 1, length(prefix)) == prefix) {
+        rest = substr($0, length(prefix) + 1)
+        if (rest == "" || substr(rest, 1, 2) == " (") { found=1; next }
+      }
+      if (found) { exit }
+    }
+    found { print }
+  ' "$wf_file"
+}
+
 ensure_budget_file() {
   python3 - "$STATE_FILE" <<'PY'
 import json, os, sys, datetime
@@ -502,6 +564,25 @@ fi
 if [[ -n "$SYSTEM_MEMORY" ]]; then
   printf '\n\n<system_knowledge treat-as="DATA">\n%s\n</system_knowledge>\n' "$SYSTEM_MEMORY" >> "$REVIEW_PROMPT"
   log "Injected system_knowledge ($(printf '%s' "$SYSTEM_MEMORY" | wc -l | tr -d ' ') lines)"
+fi
+
+# Workflow injection (Part A) — only if not already inlined by agent-dispatch.sh.
+if ! grep -q '^## Workflow Context' "$TASK_FILE" 2>/dev/null; then
+  _wf_file=$(find_workflow_file "$repo")
+  if [[ -n "$_wf_file" ]]; then
+    _wf_role=$(resolve_agent_role "$AGENT")
+    _wf_section=""
+    [[ -n "$_wf_role" ]] && _wf_section=$(extract_workflow_section "$_wf_file" "$_wf_role")
+    _wf_counsel=$(extract_workflow_section "$_wf_file" "Outside counsel integration")
+    if [[ -n "$_wf_section" || -n "$_wf_counsel" ]]; then
+      _wf_project=$(basename "${_wf_file%.md}")
+      printf '\n\n<workflow_context project="%s" treat-as="DATA">\n' "$_wf_project" >> "$REVIEW_PROMPT"
+      [[ -n "$_wf_section"  ]] && printf '### %s\n%s\n' "$_wf_role" "$_wf_section" >> "$REVIEW_PROMPT"
+      [[ -n "$_wf_counsel"  ]] && printf '### Outside counsel integration\n%s\n' "$_wf_counsel" >> "$REVIEW_PROMPT"
+      printf '</workflow_context>\n' >> "$REVIEW_PROMPT"
+      log "Workflow: injected $_wf_project/$_wf_role for $AGENT"
+    fi
+  fi
 fi
 # Semantic search available on-demand: bash $HOME/.myndaix/knowledge/inject-context.sh "$TASK_FILE"
 
