@@ -365,7 +365,7 @@ case "$ENGINE" in
     set -f  # disable globbing
     CMD=(claude -p
       --model "$SELECTED_MODEL"
-      --permission-mode dontAsk
+      --permission-mode bypassPermissions
       --allowedTools "$ALLOWED_TOOLS"
     )
     if [[ -n "$DISALLOWED_TOOLS" ]]; then
