@@ -1,5 +1,5 @@
 #!/bin/bash
-set -u
+set -euo pipefail
 WATCHERS_DIR="$HOME/.myndaix/bridge/watchers"
 LOGFILE="$WATCHERS_DIR/watcher.log"
 OPENCLAW="/opt/homebrew/bin/openclaw"
